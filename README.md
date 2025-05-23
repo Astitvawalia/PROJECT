@@ -32,6 +32,7 @@ This full-stack application provides an admin interface to track employee collec
 
 
 ### Backend
+- Swagger + OpenAPI
 - Node.js  + Restify
 - Sequelize ORM
 - MySQL (or SQLite for quick testing)
