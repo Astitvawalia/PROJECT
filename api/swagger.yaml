@@ -1,0 +1,255 @@
+openapi: 3.0.0
+info:
+  title: Employee Net Collection API
+  version: "1.0.0"
+  description: API for managing employee collections, deposits, and reporting
+
+servers:
+  - url: http://localhost:8081/
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Employee:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+
+    Collection:
+      type: object
+      properties:
+        id:
+          type: integer
+        employeeId:
+          type: integer
+        amount:
+          type: number
+        date:
+          type: string
+          format: date
+
+    Deposit:
+      type: object
+      properties:
+        id:
+          type: integer
+        employeeId:
+          type: integer
+        amount:
+          type: number
+        date:
+          type: string
+          format: date
+
+    OutstandingReport:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        netCollection:
+          type: number
+        totalDeposited:
+          type: number
+        difference:
+          type: number
+        mostRecentTransactionDate:
+          type: string
+          format: date
+
+    PaymentReport:
+      type: object
+      properties:
+        employeeId:
+          type: integer
+        employeeName:
+          type: string
+        collectionAmount:
+          type: number
+        collectionDate:
+          type: string
+          format: date
+        depositAmount:
+          type: number
+        depositDate:
+          type: string
+          format: date
+        difference:
+          type: number
+        outstandingAfterAllocation:
+          type: number
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+
+paths:
+  /auth/login:
+    post:
+      summary: Admin Login
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /employees:
+    get:
+      summary: List all employees
+      operationId: listEmployees
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Employee'
+
+  /employees/{id}/collection:
+    post:
+      summary: Add MM collection for employee
+      operationId: addCollection
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, date]
+              properties:
+                amount:
+                  type: number
+                date:
+                  type: string
+                  format: date
+      responses:
+        '201':
+          description: Collection added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collection'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /employees/{id}/deposit:
+    post:
+      summary: Record deposit for employee
+      operationId: addDeposit
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, date]
+              properties:
+                amount:
+                  type: number
+                date:
+                  type: string
+                  format: date
+      responses:
+        '201':
+          description: Deposit added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deposit'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /reports/outstanding:
+    get:
+      summary: Get outstanding net collections per employee
+      operationId: getOutstandingReport
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Outstanding report
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OutstandingReport'
+
+  /reports/payment-details:
+    get:
+      summary: Get employee payment report
+      operationId: getPaymentReport
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Payment report
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentReport'
